@@ -15,6 +15,15 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          fi
+          yes | "$SDKMANAGER" --licenses
+          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
       - name: Generate Android app project
         shell: bash
         run: |
@@ -115,9 +124,8 @@ jobs:
           function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function backup(){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.href=u;a.download='sanjaykumar-electrical-backup.json';a.click();URL.revokeObjectURL(u)}function restore(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{d={...empty,...JSON.parse(r.result)};save()}catch(x){alert('Invalid backup')}};r.readAsText(f)}render();
           </script></body></html>
           EOF
-          gradle wrapper --gradle-version 8.9
       - name: Build debug APK
-        run: ./gradlew --no-daemon assembleDebug
+        run: gradle --no-daemon --stacktrace assembleDebug
       - name: Upload APK file
         uses: actions/upload-artifact@v4
         with:
@@ -133,3 +141,4 @@ jobs:
           name: Sanjaykumar Electrical 2.0
           make_latest: true
           files: app/build/outputs/apk/debug/app-debug.apk
+          overwrite_files: true
